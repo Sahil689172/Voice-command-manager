@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VOICE-CMD - Voice Controlled Linux Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎤 VOICE-CMD</h1>
+            <p>Voice Controlled Linux Process & File Manager</p>
+        </header>
+
+        <main>
+            <!-- Voice Input Section -->
+            <section class="voice-input">
+                <h2>Voice Command</h2>
+                <div class="mic-container">
+                    <button id="micButton" class="mic-button">
+                        <span class="mic-icon">🎤</span>
+                        <span class="mic-text">Click to Speak</span>
+                    </button>
+                </div>
+                
+                <!-- Command Input Section -->
+                <div class="command-input">
+                    <label for="commandInput">Enter Command (Text Input):</label>
+                    <div class="input-group">
+                        <input type="text" id="commandInput" placeholder="Type your command here (e.g., 'list files', 'create directory test')" />
+                        <button id="sendButton" class="send-button">Send</button>
+                    </div>
+                </div>
+                
+                <!-- Recognized Command Display -->
+                <div class="command-display">
+                    <label for="recognizedCommand">Recognized Command:</label>
+                    <textarea id="recognizedCommand" placeholder="Your voice command will appear here..." readonly></textarea>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results">
+                <h2>Command Results</h2>
+                <div class="output-log" id="outputLog">
+                    <div class="log-entry">
+                        <span class="timestamp">[Ready]</span>
+                        <span class="message">System ready. Click the mic button to start voice input.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Status Section -->
+            <section class="status">
+                <div class="status-indicator" id="statusIndicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Ready</span>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
