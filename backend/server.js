@@ -6,8 +6,14 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const commandUtils = require('./commandUtils');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
+const { exec } = require('child_process');
+const commandUtils = require('./utils/commandUtils');
 const tts = require('./tts'); // Added for Step 7 - TTS support
+const memory = require('./memory'); // Added for Step 11 - Memory support
+const security = require('./utils/security'); // Added for Step 12 - Security support
+const logger = require('./utils/logger'); // Enhanced logging system
 
 // Initialize Express app
 const app = express();
@@ -16,7 +22,9 @@ const PORT = 3000;
 // Configuration flags
 const CONFIG = {
     TTS_ENABLED: true, // Set to true to enable TTS (optional feature)
-    LOG_COMMANDS: true  // Set to true to enable command logging
+    LOG_COMMANDS: true, // Set to true to enable command logging
+    MEMORY_ENABLED: true, // Set to true to enable persistent memory
+    SECURITY_ENABLED: true // Set to true to enable security sandboxing
 };
 
 // VOICE-CMD working directory
@@ -29,7 +37,9 @@ app.use(express.json()); // Parse JSON requests
 // Basic route to check if server is running
 app.get('/', (req, res) => {
     res.json({
-        status: "Backend server running"
+        status: "Backend server running",
+        workingDir: WORKING_DIR,
+        features: ["File Operations", "Shell Commands", "TTS Support", "Speech-to-Text", "Persistent Memory", "Security Sandboxing"]
     });
 });
 
@@ -42,80 +52,49 @@ app.post('/command', async (req, res) => {
         // Validate that commandText exists
         if (!commandText) {
             return res.status(400).json({
-                status: "error",
-                receivedCommand: null,
-                mappedCommand: null,
-                output: null,
-                error: "Missing commandText in request body",
-                message: "Missing commandText in request body"
+                input: "",
+                action: "Validation Error",
+                result: "Missing commandText in request body",
+                success: false
             });
         }
         
-        // TODO: Add input validation and sanitization here
-        // TODO: Add authentication/authorization checks here
+        // Execute the command using the new command utils
+        const result = await commandUtils.executeCommand(commandText);
         
-        // Map the command to Linux shell command
-        const mappedCommand = commandUtils.mapCommandToShell(commandText);
-        
-        // Execute the mapped command
-        const executionResult = await commandUtils.executeCommand(mappedCommand);
-        
-        // TODO: Add result processing and error handling here
-        
-        // Log command execution (if enabled)
+        // Enhanced logging
         if (CONFIG.LOG_COMMANDS) {
-            commandUtils.logCommand(
+            const logStatus = result.success ? 'SUCCESS' : (result.blocked ? 'BLOCKED' : 'ERROR');
+            await logger.logCommand(
                 commandText,
-                mappedCommand,
-                executionResult.output,
-                executionResult.error
+                logStatus,
+                result.result,
+                {
+                    action: result.action,
+                    success: result.success,
+                    blocked: result.blocked || false,
+                    timestamp: new Date().toISOString()
+                }
             );
         }
         
         // Text-to-Speech (if enabled)
-        if (CONFIG.TTS_ENABLED) {
-            const textToSpeak = executionResult.success ? 
-                executionResult.output : 
-                executionResult.error || executionResult.output;
-            
-            // TTS is non-blocking - don't wait for it
-            tts.speakText(textToSpeak).catch(ttsError => {
+        if (CONFIG.TTS_ENABLED && result.success) {
+            tts.speakText(result.result).catch(ttsError => {
                 console.log('TTS: Error speaking text:', ttsError.message);
             });
         }
         
-        // Return JSON response for frontend consumption
-        // Frontend will display this response in the log/output area
-        if (executionResult.success) {
-            res.json({
-                status: "success",
-                receivedCommand: commandText,
-                mappedCommand: mappedCommand,
-                output: executionResult.output,
-                error: null,
-                message: "Command executed successfully"
-            });
-        } else {
-            res.status(400).json({
-                status: "error",
-                receivedCommand: commandText,
-                mappedCommand: mappedCommand,
-                output: executionResult.output,
-                error: executionResult.error,
-                message: "Command execution failed"
-            });
-        }
+        // Return structured JSON response
+        res.json(result);
         
     } catch (error) {
         console.error('Error processing command:', error);
-        // Return consistent JSON structure for frontend consumption
         res.status(500).json({
-            status: "error",
-            receivedCommand: commandText || "unknown",
-            mappedCommand: null,
-            output: null,
-            error: error.message,
-            message: "Internal server error processing command"
+            input: req.body.commandText || "unknown",
+            action: "Internal Server Error",
+            result: `Internal server error: ${error.message}`,
+            success: false
         });
     }
 });
@@ -168,19 +147,152 @@ app.get('/config', (req, res) => {
     res.json({
         ttsEnabled: CONFIG.TTS_ENABLED,
         logCommands: CONFIG.LOG_COMMANDS,
+        memoryEnabled: CONFIG.MEMORY_ENABLED,
+        securityEnabled: CONFIG.SECURITY_ENABLED,
         serverStatus: "running"
     });
 });
 
+// Security stats endpoint
+app.get('/security/stats', (req, res) => {
+    try {
+        const stats = security.getSecurityStats();
+        res.json({
+            success: true,
+            stats: stats
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Security allowed commands endpoint
+app.get('/security/commands', (req, res) => {
+    try {
+        res.json({
+            success: true,
+            allowedCommands: security.getAllowedCommands(),
+            blockedCommands: security.getBlockedCommands()
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Log statistics endpoint
+app.get('/logs/stats', async (req, res) => {
+    try {
+        const stats = await logger.getLogStats();
+        res.json({
+            success: true,
+            stats: stats
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Clear logs endpoint
+app.post('/logs/clear', async (req, res) => {
+    try {
+        const result = await logger.clearLogs();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Speech-to-text transcription endpoint
+app.post('/api/transcribe', upload.single('audio'), (req, res) => {
+    const audioPath = path.resolve(req.file.path);
+    const whisperBin = path.resolve('../../whisper.cpp/build/bin/whisper-cli');
+    const modelPath = path.resolve('../../whisper.cpp/models/ggml-base.en.bin');
+
+    const cmd = `${whisperBin} -m ${modelPath} -f ${audioPath}`;
+
+    exec(cmd, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Transcription error: ${stderr}`);
+            return res.status(500).json({ error: 'Transcription failed' });
+        }
+        res.json({ text: stdout.trim() });
+    });
+});
+
+// Check memory availability on startup
+async function checkMemoryOnStartup() {
+    if (CONFIG.MEMORY_ENABLED) {
+        try {
+            const stats = await memory.getMemoryStats();
+            console.log(`Memory: Persistent memory enabled (${stats.totalUserData} user items, ${stats.totalCommands} commands)`);
+        } catch (error) {
+            console.log('Memory: Error initializing memory system - memory will be disabled');
+            CONFIG.MEMORY_ENABLED = false;
+        }
+    } else {
+        console.log('Memory: Persistent memory is disabled');
+    }
+}
+
+// Check security system on startup
+async function checkSecurityOnStartup() {
+    if (CONFIG.SECURITY_ENABLED) {
+        try {
+            const stats = security.getSecurityStats();
+            console.log(`Security: Sandboxing enabled (${stats.allowedCommands || security.getAllowedCommands().length} allowed commands, ${stats.blockedCommands || security.getBlockedCommands().length} blocked patterns)`);
+            console.log(`Security: Log file: ${security.LOG_FILE}`);
+        } catch (error) {
+            console.log('Security: Error initializing security system - security will be disabled');
+            CONFIG.SECURITY_ENABLED = false;
+        }
+    } else {
+        console.log('Security: Security sandboxing is disabled');
+    }
+}
+
 // Start server
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
     console.log(`Backend server running on port ${PORT}`);
     console.log(`Command logging: ${CONFIG.LOG_COMMANDS ? 'enabled' : 'disabled'}`);
+    console.log(`Working directory: ${WORKING_DIR}`);
+    console.log(`File operations: enabled`);
     
     // Ensure working directory exists
     ensureWorkingDirectory();
     
-    await checkTTSOnStartup();
+    // Initialize systems asynchronously
+    initializeSystems();
 });
+
+// Initialize systems asynchronously
+async function initializeSystems() {
+    try {
+        // Initialize logging system
+        await logger.ensureLogDirectory();
+        await logger.logSystem('SERVER_START', 'SUCCESS', `VOICE-CMD server started on port ${PORT}`, {
+            port: PORT,
+            workingDir: WORKING_DIR,
+            features: ['File Operations', 'Shell Commands', 'TTS Support', 'Speech-to-Text', 'Persistent Memory', 'Security Sandboxing']
+        });
+        
+        await checkTTSOnStartup();
+        await checkMemoryOnStartup();
+        await checkSecurityOnStartup();
+    } catch (error) {
+        console.error('Error initializing systems:', error);
+    }
+}
 
 module.exports = app;

@@ -61,5 +61,160 @@
     "mappedCommand": "touch test_working_dir.txt",
     "output": "Command executed successfully",
     "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:10:15.969Z",
+    "receivedCommand": "create file hello.txt",
+    "mappedCommand": "Create File",
+    "output": "File 'hello.txt' created successfully ✅",
+    "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:10:23.866Z",
+    "receivedCommand": "list files",
+    "mappedCommand": "List Files",
+    "output": "Found 2 items in '.':\n📄 hello.txt (0 bytes)\n📄 test_working_dir.txt (0 bytes)",
+    "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:10:33.042Z",
+    "receivedCommand": "copy file hello.txt to backup.txt",
+    "mappedCommand": "Copy File",
+    "output": "File 'hello.txt' copied to 'backup.txt' successfully ✅",
+    "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:10:42.245Z",
+    "receivedCommand": "move file backup.txt to archive/",
+    "mappedCommand": "Move File",
+    "output": "File 'backup.txt' moved to 'archive/' successfully ✅",
+    "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:10:47.928Z",
+    "receivedCommand": "delete file hello.txt",
+    "mappedCommand": "Delete File",
+    "output": "File 'hello.txt' deleted successfully ✅",
+    "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:10:53.864Z",
+    "receivedCommand": "delete file nonexistent.txt",
+    "mappedCommand": "Delete File",
+    "output": "File 'nonexistent.txt' not found ❌",
+    "error": "File 'nonexistent.txt' not found ❌"
+  },
+  {
+    "timestamp": "2025-09-16T13:11:00.158Z",
+    "receivedCommand": "ls",
+    "mappedCommand": "Shell Command",
+    "output": "archive\ntest_working_dir.txt\n",
+    "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:20:15.105Z",
+    "receivedCommand": "remember my name is John",
+    "mappedCommand": "Save Memory",
+    "output": "Memory saved: \"my name\" = \"John\"",
+    "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:20:23.542Z",
+    "receivedCommand": "remember project deadline is tomorrow",
+    "mappedCommand": "Save Memory",
+    "output": "Memory saved: \"project deadline\" = \"tomorrow\"",
+    "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:20:29.873Z",
+    "receivedCommand": "recall my name",
+    "mappedCommand": "Recall Memory",
+    "output": "\"my name\" = \"John\" (saved: 9/16/2025, 6:50:15 PM)",
+    "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:20:37.387Z",
+    "receivedCommand": "show memory",
+    "mappedCommand": "Show Memory",
+    "output": "Memory contains 2 items:\n\"my name\" = \"John\"\n\"project deadline\" = \"tomorrow\"",
+    "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:20:44.830Z",
+    "receivedCommand": "search memory project",
+    "mappedCommand": "Search Memory",
+    "output": "Found 1 matches for \"project\":\n\"project deadline\" = \"tomorrow\" (userData)",
+    "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:20:51.924Z",
+    "receivedCommand": "memory stats",
+    "mappedCommand": "Memory Stats",
+    "output": "Memory Statistics:\n- User Data: 2 items\n- Context: 0 items\n- Commands: 5 items\n- Last Updated: 9/16/2025, 6:50:44 PM\n- Memory Size: 1 KB",
+    "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:21:05.979Z",
+    "receivedCommand": "command history",
+    "mappedCommand": "Command History",
+    "output": "Recent Commands:\n1. \"memory stats\" (9/16/2025, 6:50:51 PM)\n2. \"search memory project\" (9/16/2025, 6:50:44 PM)\n3. \"show memory\" (9/16/2025, 6:50:37 PM)\n4. \"recall my name\" (9/16/2025, 6:50:29 PM)\n5. \"remember project deadline is tomorrow\" (9/16/2025, 6:50:23 PM)",
+    "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:21:41.950Z",
+    "receivedCommand": "recall my name",
+    "mappedCommand": "Recall Memory",
+    "output": "\"my name\" = \"John\" (saved: 9/16/2025, 6:50:15 PM)",
+    "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:21:53.864Z",
+    "receivedCommand": "create file test.txt",
+    "mappedCommand": "Create File",
+    "output": "File 'test.txt' created successfully ✅",
+    "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:32:20.618Z",
+    "receivedCommand": "ls",
+    "mappedCommand": "Shell Command",
+    "output": "archive\nlogs\ntest.txt\ntest_working_dir.txt\n",
+    "error": null
+  },
+  {
+    "timestamp": "2025-09-16T13:32:32.323Z",
+    "receivedCommand": "rm -rf /",
+    "mappedCommand": "Shell Command",
+    "output": "🚫 Command blocked for security: rm -rf /\nReason: Command contains blocked pattern: \"rm -rf\"",
+    "error": "🚫 Command blocked for security: rm -rf /\nReason: Command contains blocked pattern: \"rm -rf\""
+  },
+  {
+    "timestamp": "2025-09-16T13:32:41.968Z",
+    "receivedCommand": "shutdown",
+    "mappedCommand": "Shell Command",
+    "output": "🚫 Command blocked for security: shutdown\nReason: Command contains blocked pattern: \"shutdown\"",
+    "error": "🚫 Command blocked for security: shutdown\nReason: Command contains blocked pattern: \"shutdown\""
+  },
+  {
+    "timestamp": "2025-09-16T13:32:49.083Z",
+    "receivedCommand": "sudo su",
+    "mappedCommand": "Shell Command",
+    "output": "🚫 Command blocked for security: sudo su\nReason: Command contains blocked pattern: \"sudo su\"",
+    "error": "🚫 Command blocked for security: sudo su\nReason: Command contains blocked pattern: \"sudo su\""
+  },
+  {
+    "timestamp": "2025-09-16T13:32:55.330Z",
+    "receivedCommand": "hack",
+    "mappedCommand": "Shell Command",
+    "output": "🚫 Command blocked for security: hack\nReason: Command \"hack\" not in allowlist\nSuggestion: Try one of these: mkdir, touch, ls, cp, mv...",
+    "error": "🚫 Command blocked for security: hack\nReason: Command \"hack\" not in allowlist\nSuggestion: Try one of these: mkdir, touch, ls, cp, mv..."
+  },
+  {
+    "timestamp": "2025-09-16T13:33:51.153Z",
+    "receivedCommand": "create file security_test.txt",
+    "mappedCommand": "Create File",
+    "output": "File 'security_test.txt' created successfully ✅",
+    "error": null
   }
 ]
+

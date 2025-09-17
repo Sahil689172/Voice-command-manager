@@ -75,3 +75,6 @@ A webpage where user clicks mic → speaks command → system executes on Linux 
 Functions include: create/delete/copy/move files, nano editing & saving, list/kill processes.
 
 Everything works inside Ubuntu Linux with safe, secure execution.
+
+
+

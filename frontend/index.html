@@ -9,8 +9,17 @@
 <body>
     <div class="container">
         <header>
-            <h1>🎤 VOICE-CMD</h1>
-            <p>Voice Controlled Linux Process & File Manager</p>
+            <div class="header-content">
+                <div class="header-left">
+                    <h1>🎤 VOICE-CMD</h1>
+                    <p>Voice Controlled Linux Process & File Manager</p>
+                </div>
+                <div class="header-right">
+                    <button id="themeToggle" class="theme-toggle" title="Toggle Dark/Light Mode">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </div>
+            </div>
         </header>
 
         <main>
@@ -56,6 +65,54 @@
                 <div class="status-indicator" id="statusIndicator">
                     <span class="status-dot"></span>
                     <span class="status-text">Ready</span>
+                </div>
+            </section>
+
+            <!-- Help Section -->
+            <section class="help">
+                <h2>Available Commands</h2>
+                <div class="command-categories">
+                    <div class="category">
+                        <h3>File Operations</h3>
+                        <ul>
+                            <li>create file hello.txt</li>
+                            <li>delete file old.txt</li>
+                            <li>copy file a.txt to b.txt</li>
+                            <li>move file a.txt to backup/</li>
+                            <li>list files</li>
+                        </ul>
+                    </div>
+                    <div class="category">
+                        <h3>Memory Operations</h3>
+                        <ul>
+                            <li>remember my name is John</li>
+                            <li>remember project deadline is tomorrow</li>
+                            <li>recall my name</li>
+                            <li>show memory</li>
+                            <li>search memory project</li>
+                            <li>memory stats</li>
+                            <li>command history</li>
+                            <li>clear memory</li>
+                        </ul>
+                    </div>
+                    <div class="category">
+                        <h3>Shell Commands</h3>
+                        <ul>
+                            <li>ls</li>
+                            <li>pwd</li>
+                            <li>mkdir test</li>
+                            <li>ping google.com</li>
+                        </ul>
+                    </div>
+                    <div class="category">
+                        <h3>Security Features</h3>
+                        <ul>
+                            <li>🚫 Commands are sandboxed</li>
+                            <li>✅ Only safe commands allowed</li>
+                            <li>📝 All activity is logged</li>
+                            <li>🛡️ Dangerous commands blocked</li>
+                        </ul>
+                    </div>
                 </div>
             </section>
         </main>
