@@ -60,11 +60,182 @@
                 </div>
             </section>
 
-            <!-- Status Section -->
-            <section class="status">
-                <div class="status-indicator" id="statusIndicator">
-                    <span class="status-dot"></span>
-                    <span class="status-text">Ready</span>
+            <!-- Authentication Section -->
+            <section class="auth" id="authSection">
+                <div class="auth-container">
+                    <div class="auth-header">
+                        <h2>Welcome to VOICE-CMD</h2>
+                        <p>Please login or register to continue</p>
+                    </div>
+                    
+                    <!-- Login Form -->
+                    <div class="auth-form" id="loginForm">
+                        <h3>Login</h3>
+                        <form id="loginFormElement">
+                            <div class="form-group">
+                                <label for="loginUsername">Username:</label>
+                                <input type="text" id="loginUsername" required />
+                            </div>
+                            <div class="form-group">
+                                <label for="loginPassword">Password:</label>
+                                <input type="password" id="loginPassword" required />
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-primary">Login</button>
+                                <button type="button" id="showRegisterForm" class="btn-secondary">Register</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Register Form -->
+                    <div class="auth-form" id="registerForm" style="display: none;">
+                        <h3>Register</h3>
+                        <form id="registerFormElement">
+                            <div class="form-group">
+                                <label for="registerUsername">Username:</label>
+                                <input type="text" id="registerUsername" required minlength="3" />
+                            </div>
+                            <div class="form-group">
+                                <label for="registerPassword">Password:</label>
+                                <input type="password" id="registerPassword" required minlength="6" />
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm Password:</label>
+                                <input type="password" id="confirmPassword" required minlength="6" />
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-primary">Register</button>
+                                <button type="button" id="showLoginForm" class="btn-secondary">Login</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Main App (hidden until authenticated) -->
+            <div id="mainApp" style="display: none;">
+                <!-- User Status -->
+                <section class="user-status">
+                    <div class="user-info">
+                        <span class="user-welcome">Welcome, <span id="currentUsername">User</span>!</span>
+                        <div class="connection-status">
+                            <span id="connectionIndicator" class="connection-dot">🔴</span>
+                            <span id="connectionText">Disconnected</span>
+                        </div>
+                        <button id="logoutButton" class="btn-danger">Logout</button>
+                    </div>
+                </section>
+
+                <!-- Live Events Panel -->
+                <section class="live-events">
+                    <div class="live-events-header">
+                        <h2>Live Events</h2>
+                        <div class="live-events-controls">
+                            <button id="clearEvents" class="btn-secondary" title="Clear Events">
+                                <span>🗑️</span>
+                            </button>
+                            <button id="toggleEvents" class="btn-secondary" title="Toggle Auto-scroll">
+                                <span id="autoScrollIcon">📌</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="live-events-list" id="liveEventsList">
+                        <div class="live-events-empty">
+                            <p>No live events yet</p>
+                            <p>Execute commands to see real-time updates</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Status Section -->
+                <section class="status">
+                    <div class="status-indicator" id="statusIndicator">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Ready</span>
+                    </div>
+                </section>
+
+            <!-- Command History Section -->
+            <section class="history">
+                <div class="history-header">
+                    <h2>Command History</h2>
+                    <div class="history-controls">
+                        <button id="refreshHistory" class="btn-secondary" title="Refresh History">
+                            <span>🔄</span>
+                        </button>
+                        <button id="clearHistory" class="btn-danger" title="Clear History">
+                            <span>🗑️</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="history-stats" id="historyStats">
+                    <span class="stat">Total: <span id="totalCommands">0</span></span>
+                    <span class="stat">Success: <span id="successCount">0</span></span>
+                    <span class="stat">Errors: <span id="errorCount">0</span></span>
+                    <span class="stat">Blocked: <span id="blockedCount">0</span></span>
+                </div>
+                <div class="history-list" id="historyList">
+                    <div class="history-empty">
+                        <p>No commands in history yet</p>
+                        <p>Execute some commands to see them here</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Command Scheduler Section -->
+            <section class="scheduler">
+                <div class="scheduler-header">
+                    <h2>Command Scheduler</h2>
+                    <div class="scheduler-controls">
+                        <button id="refreshSchedules" class="btn-secondary" title="Refresh Schedules">
+                            <span>🔄</span>
+                        </button>
+                        <button id="showSchedulerForm" class="btn-primary" title="Add New Schedule">
+                            <span>➕</span> Schedule
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Schedule Form -->
+                <div class="scheduler-form" id="schedulerForm" style="display: none;">
+                    <div class="form-group">
+                        <label for="scheduleCommand">Command to Schedule:</label>
+                        <input type="text" id="scheduleCommand" placeholder="e.g., ls, pwd, create file test.txt" />
+                    </div>
+                    <div class="form-group">
+                        <label for="scheduleTime">Schedule Time:</label>
+                        <input type="datetime-local" id="scheduleTime" />
+                    </div>
+                    <div class="form-group">
+                        <label for="scheduleRepeat">Repeat:</label>
+                        <select id="scheduleRepeat">
+                            <option value="once">Once</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="hourly">Hourly</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="scheduleDescription">Description (optional):</label>
+                        <input type="text" id="scheduleDescription" placeholder="e.g., Daily backup, System check" />
+                    </div>
+                    <div class="form-actions">
+                        <button id="createSchedule" class="btn-primary">Create Schedule</button>
+                        <button id="cancelScheduleForm" class="btn-secondary">Cancel</button>
+                    </div>
+                </div>
+
+                <div class="scheduler-stats" id="schedulerStats">
+                    <span class="stat">Total: <span id="totalSchedules">0</span></span>
+                    <span class="stat">Active: <span id="activeSchedules">0</span></span>
+                    <span class="stat">Completed: <span id="completedSchedules">0</span></span>
+                    <span class="stat">Cancelled: <span id="cancelledSchedules">0</span></span>
+                </div>
+                <div class="scheduler-list" id="schedulerList">
+                    <div class="scheduler-empty">
+                        <p>No scheduled commands yet</p>
+                        <p>Click "Schedule" to create your first automated command</p>
+                    </div>
                 </div>
             </section>
 
@@ -115,6 +286,7 @@
                     </div>
                 </div>
             </section>
+            </div> <!-- End mainApp -->
         </main>
     </div>
 

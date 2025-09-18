@@ -9,6 +9,7 @@ const commandParser = require('./commandParser');
 const FileOperations = require('./fileOps');
 const memory = require('../memory');
 const security = require('./security');
+const logger = require('./logger');
 
 // VOICE-CMD working directory
 const WORKING_DIR = path.join(os.homedir(), 'Desktop', 'VOICE-CMD');
@@ -98,19 +99,21 @@ function mapCommandToShell(commandText) {
  * @returns {Promise<Object>} - Execution result with action, result, and success status
  */
 async function executeCommand(commandText) {
-    console.log(`Executing command: "${commandText}"`);
-    
-    // Parse the command
-    const parseResult = commandParser.parseCommand(commandText);
-    
-    if (parseResult.type === "error") {
-        return {
-            input: commandText,
-            action: "Parse Error",
-            result: parseResult.error,
-            success: false
-        };
-    }
+    try {
+        console.log(`Executing command: "${commandText}"`);
+        
+        // Parse the command
+        const parseResult = commandParser.parseCommand(commandText);
+        
+        if (parseResult.type === "error") {
+            return {
+                input: commandText,
+                action: "Parse Error",
+                result: parseResult.error,
+                success: false,
+                code: "E_PARSE_ERROR"
+            };
+        }
     
     if (parseResult.type === "memoryOp") {
         // Handle memory operations
@@ -131,7 +134,8 @@ async function executeCommand(commandText) {
                 input: commandText,
                 action: "Memory Operation Error",
                 result: `Error executing memory operation: ${error.message}`,
-                success: false
+                success: false,
+                code: "E_MEMORY_OPERATION_FAILED"
             };
         }
     }
@@ -156,7 +160,8 @@ async function executeCommand(commandText) {
                 input: commandText,
                 action: "File Operation Error",
                 result: `Error executing file operation: ${error.message}`,
-                success: false
+                success: false,
+                code: "E_FILE_OPERATION_FAILED"
             };
         }
     }
@@ -173,25 +178,40 @@ async function executeCommand(commandText) {
                 input: commandText,
                 action: "Shell Command",
                 result: result.output,
-                success: result.success
+                success: result.success,
+                blocked: result.blocked || false
             };
         } catch (error) {
             return {
                 input: commandText,
                 action: "Shell Command Error",
                 result: `Error executing shell command: ${error.message}`,
-                success: false
+                success: false,
+                code: "E_SHELL_COMMAND_FAILED"
             };
         }
     }
     
-    // Fallback
+    // Fallback for unknown command types
     return {
         input: commandText,
         action: "Unknown Command",
         result: "Command type not recognized",
-        success: false
+        success: false,
+        code: "E_UNKNOWN_COMMAND"
     };
+    
+    } catch (error) {
+        // Top-level error handler for executeCommand
+        console.error('Unexpected error in executeCommand:', error);
+        return {
+            input: commandText,
+            action: "System Error",
+            result: `An unexpected error occurred: ${error.message}`,
+            success: false,
+            code: "E_SYSTEM_ERROR"
+        };
+    }
 }
 
 /**
@@ -322,7 +342,7 @@ async function executeShellCommand(command) {
         
         if (!securityCheck.safe) {
             // Log the blocked command
-            security.logCommand(command, 'BLOCKED', securityCheck.reason);
+            logger.logSecurity(command, 'BLOCKED', securityCheck.reason);
             
             resolve({
                 success: false,
@@ -333,7 +353,7 @@ async function executeShellCommand(command) {
         }
         
         // Log the allowed command
-        security.logCommand(command, 'ALLOWED', 'Command passed security checks');
+        logger.logCommand(command, 'SUCCESS', 'Command passed security checks');
         
         // Execute the command
         exec(command, { 
@@ -343,77 +363,47 @@ async function executeShellCommand(command) {
         }, (error, stdout, stderr) => {
             if (error) {
                 console.log(`Command execution error: ${error.message}`);
-                security.logCommand(command, 'ERROR', error.message);
+                logger.logCommand(command, 'ERROR', error.message);
+                
+                // Determine specific error type and code
+                let errorCode = "E_COMMAND_FAILED";
+                let errorMessage = stderr || error.message;
+                
+                if (error.code === 'ENOENT') {
+                    errorCode = "E_COMMAND_NOT_FOUND";
+                    errorMessage = `Command not found: ${command.split(' ')[0]}`;
+                } else if (error.code === 'EACCES') {
+                    errorCode = "E_PERMISSION_DENIED";
+                    errorMessage = `Permission denied: ${error.message}`;
+                } else if (error.signal === 'SIGTERM') {
+                    errorCode = "E_COMMAND_TIMEOUT";
+                    errorMessage = `Command timed out after 10 seconds`;
+                } else if (error.code === 'ENOTDIR') {
+                    errorCode = "E_INVALID_DIRECTORY";
+                    errorMessage = `Invalid directory: ${error.message}`;
+                }
+                
                 resolve({
                     success: false,
-                    output: stderr || error.message,
-                    blocked: false
+                    output: errorMessage,
+                    blocked: false,
+                    code: errorCode
                 });
             } else {
                 console.log(`Command executed successfully in ${WORKING_DIR}`);
-                security.logCommand(command, 'SUCCESS', 'Command executed successfully');
+                logger.logCommand(command, 'SUCCESS', 'Command executed successfully');
                 resolve({
                     success: true,
                     output: stdout || 'Command executed successfully',
-                    blocked: false
+                    blocked: false,
+                    code: "SUCCESS"
                 });
             }
         });
     });
 }
 
-/**
- * Log Command
- * @param {string} commandText - The original voice command
- * @param {string} mappedCommand - The mapped Linux command
- * @param {string} output - Command execution output
- * @param {string|null} error - Error message if any
- */
-function logCommand(commandText, mappedCommand, output, error) {
-    try {
-        const logEntry = {
-            timestamp: new Date().toISOString(),
-            receivedCommand: commandText,
-            mappedCommand: mappedCommand,
-            output: output,
-            error: error
-        };
-        
-        const logsDir = path.join(__dirname, '..', 'logs');
-        const logFile = path.join(logsDir, 'commandHistory.json');
-        
-        // Ensure logs directory exists
-        if (!fs.existsSync(logsDir)) {
-            fs.mkdirSync(logsDir, { recursive: true });
-        }
-        
-        // Read existing logs
-        let logs = [];
-        if (fs.existsSync(logFile)) {
-            try {
-                const data = fs.readFileSync(logFile, 'utf8');
-                logs = JSON.parse(data);
-            } catch (parseError) {
-                console.log('Warning: Could not parse existing logs, starting fresh');
-                logs = [];
-            }
-        }
-        
-        // Append new log entry
-        logs.push(logEntry);
-        
-        // Write back to file
-        fs.writeFileSync(logFile, JSON.stringify(logs, null, 2));
-        
-        console.log(`Command logged: ${commandText} -> ${mappedCommand}`);
-        
-    } catch (logError) {
-        console.error('Error logging command:', logError.message);
-    }
-}
-
 module.exports = {
     mapCommandToShell,
-    executeCommand,
-    logCommand
+    executeCommand
 };

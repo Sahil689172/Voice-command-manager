@@ -1,0 +1,16 @@
+{
+  "testuser": {
+    "username": "testuser",
+    "password": "$2b$10$abDzMVTDNIuUj/SX12gKQ.KzzwYa9PAlUBbNhjNHomEIaXWJnQXfa",
+    "createdAt": "2025-09-18T17:34:23.569Z",
+    "lastLogin": "2025-09-18T17:47:52.492Z",
+    "isActive": true
+  },
+  "user2": {
+    "username": "user2",
+    "password": "$2b$10$05k9mhfHh2ZtGyZF38ugG.dWJ0xWwjb8t5dM1vH1UyiybAzsThTGW",
+    "createdAt": "2025-09-18T17:35:49.555Z",
+    "lastLogin": null,
+    "isActive": true
+  }
+}

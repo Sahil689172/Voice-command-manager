@@ -4,15 +4,10 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const logger = require('./logger');
 
 // Project configuration
 const PROJECT_ROOT = path.join(os.homedir(), 'Desktop', 'VOICE-CMD');
-const LOG_FILE = path.join(PROJECT_ROOT, 'logs', 'security.log');
-
-// Ensure logs directory exists
-if (!fs.existsSync(path.dirname(LOG_FILE))) {
-    fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true });
-}
 
 // ✅ Allowlist & Denylist for commands
 const allowedCommands = [
@@ -209,26 +204,12 @@ function isPathSafe(userPath) {
  */
 function logCommand(command, status, reason = '', userInfo = {}) {
     try {
-        const timestamp = new Date().toISOString();
-        const logEntry = {
-            timestamp: timestamp,
-            command: command,
-            status: status,
-            reason: reason,
-            userInfo: userInfo,
-            projectRoot: PROJECT_ROOT
-        };
-        
-        const logLine = `${timestamp} | ${status} | ${command} | ${reason}\n`;
-        fs.appendFileSync(LOG_FILE, logLine, 'utf8');
-        
-        // Also log to console for immediate feedback
         if (status === 'BLOCKED') {
-            console.log(`🚫 SECURITY: Command blocked - ${command} | Reason: ${reason}`);
+            logger.logSecurity(command, 'BLOCKED', reason, userInfo);
         } else if (status === 'ERROR') {
-            console.log(`❌ SECURITY: Command error - ${command} | Reason: ${reason}`);
+            logger.logSecurity(command, 'ERROR', reason, userInfo);
         } else {
-            console.log(`✅ SECURITY: Command allowed - ${command}`);
+            logger.logSecurity(command, 'ALLOWED', 'Command allowed', userInfo);
         }
     } catch (error) {
         console.error('Security logging error:', error.message);
@@ -241,7 +222,9 @@ function logCommand(command, status, reason = '', userInfo = {}) {
  */
 function getSecurityStats() {
     try {
-        if (!fs.existsSync(LOG_FILE)) {
+        const securityLogPath = path.join(PROJECT_ROOT, 'logs', 'security.log');
+        
+        if (!fs.existsSync(securityLogPath)) {
             return {
                 totalCommands: 0,
                 blockedCommands: 0,
@@ -251,7 +234,7 @@ function getSecurityStats() {
             };
         }
 
-        const logContent = fs.readFileSync(LOG_FILE, 'utf8');
+        const logContent = fs.readFileSync(securityLogPath, 'utf8');
         const lines = logContent.trim().split('\n').filter(line => line.trim());
         
         let blockedCount = 0;
@@ -260,12 +243,12 @@ function getSecurityStats() {
         let lastActivity = null;
 
         for (const line of lines) {
-            if (line.includes('| BLOCKED |')) blockedCount++;
-            else if (line.includes('| SUCCESS |')) successCount++;
-            else if (line.includes('| ERROR |')) errorCount++;
+            if (line.includes('BLOCKED_COMMAND')) blockedCount++;
+            else if (line.includes('ALLOWED_COMMAND')) successCount++;
+            else if (line.includes('COMMAND_ERROR')) errorCount++;
             
             // Extract timestamp from first part of line
-            const timestampMatch = line.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)/);
+            const timestampMatch = line.match(/^\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)\]/);
             if (timestampMatch) {
                 lastActivity = timestampMatch[1];
             }
@@ -277,7 +260,7 @@ function getSecurityStats() {
             successfulCommands: successCount,
             errorCommands: errorCount,
             lastActivity: lastActivity,
-            logFile: LOG_FILE
+            logFile: securityLogPath
         };
     } catch (error) {
         return {
@@ -309,8 +292,7 @@ module.exports = {
     getSecurityStats,
     getAllowedCommands,
     getBlockedCommands,
-    PROJECT_ROOT,
-    LOG_FILE
+    PROJECT_ROOT
 };
 
 
